@@ -1,10 +1,10 @@
 package main
 
 import (
-	"github.com/ajm188/gwiz/views"
+	"github.com/ajm188/gwiz/handlers"
 )
 
 func main() {
-	views.Initialize()
-	views.Serve(":8080")
+	handlers.Initialize()
+	handlers.Serve(":8080")
 }
