@@ -5,6 +5,7 @@ import (
 )
 
 func Initialize() {
+	http.Handle("/zombies/", zombies())
 	http.HandleFunc("/", index)
 }
 
