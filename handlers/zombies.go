@@ -16,17 +16,14 @@ func zombies() *http.ServeMux {
 }
 
 func zombieBase(w http.ResponseWriter, r *http.Request) {
-	if r.Method == "POST" {
-		fmt.Fprintf(w, "I see you are trying to create a zombie!\n")
-		if err := r.ParseForm(); err != nil {
-			fmt.Fprintf(w, "Uh oh. Got %s when parsing form", err)
-			return
-		}
-		name := r.FormValue("name")
-		fmt.Fprintf(w, "You asked to create a zombie with name: %s", name)
-		return
+	switch r.Method {
+	case "GET":
+		zombieIndex(w, r)
+	case "POST":
+		zombieCreate(w, r)
+	default:
+		fmt.Fprintf(w, "%s: %s\n", r.Method, r.RequestURI)
 	}
-	fmt.Fprintf(w, "%s: %s\n", r.Method, r.RequestURI)
 }
 
 func zombieDetail(w http.ResponseWriter, r *http.Request) {
@@ -35,4 +32,18 @@ func zombieDetail(w http.ResponseWriter, r *http.Request) {
 
 func zombieNew(w http.ResponseWriter, r *http.Request) {
 	http.ServeFile(w, r, "./templates/zombies/new.html")
+}
+
+func zombieIndex(w http.ResponseWriter, r *http.Request) {
+	fmt.Fprintf(w, "Listing zombies\n")
+}
+
+func zombieCreate(w http.ResponseWriter, r *http.Request) {
+	fmt.Fprintf(w, "I see you are trying to create a zombie!\n")
+	if err := r.ParseForm(); err != nil {
+		fmt.Fprintf(w, "Uh oh. Got %s when parsing form", err)
+		return
+	}
+	name := r.FormValue("name")
+	fmt.Fprintf(w, "You asked to create a zombie with name: %s", name)
 }
