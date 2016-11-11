@@ -5,6 +5,5 @@ import (
 )
 
 func main() {
-	handlers.Initialize()
 	handlers.Serve(":8080")
 }
