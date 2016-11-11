@@ -28,3 +28,8 @@ Wiz.
 ## Should you use this?
 
 Absolutely not.
+
+### Can you learn from this?
+
+Maybe?
+Time will tell.
