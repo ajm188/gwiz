@@ -1,9 +1,9 @@
 package db
 
 import (
+	"database/sql"
 	"fmt"
 	"os"
-	"database/sql"
 )
 
 import (
@@ -24,6 +24,10 @@ type queryable interface {
 	QueryRow(string, ...interface{}) *sql.Row
 }
 
+type Stmt struct {
+	*sql.Stmt
+}
+
 type Statement interface {
 	closable
 	Exec(...interface{}) (sql.Result, error)
@@ -31,11 +35,33 @@ type Statement interface {
 	QueryRow(...interface{}) *sql.Row
 }
 
+type Tx struct {
+	*sql.Tx
+}
+
+func (tx *Tx) Stmt(stmt *Stmt) Statement {
+	return &Stmt{tx.Tx.Stmt(stmt.Stmt)}
+}
+
 type Transaction interface {
 	queryable
 	Commit() error
 	Rollback() error
-	Stmt(stmt Statement) Statement
+	Stmt(stmt *Stmt) Statement
+}
+
+type DB struct {
+	*sql.DB
+}
+
+func (d *DB) Begin() (Transaction, error) {
+	tx, err := d.DB.Begin()
+	return &Tx{tx}, err
+}
+
+func (d *DB) Prepare(query string) (Statement, error) {
+	stmt, err := d.DB.Prepare(query)
+	return &Stmt{stmt}, err
 }
 
 type Connection interface {
@@ -51,7 +77,8 @@ func Database(connStr *string) (Connection, error) {
 		str := ConnectionString()
 		connStr = &str
 	}
-	fmt.Println(*connStr)
+	sqlDB, err := sql.Open("postgres", *connStr)
+	return &DB{sqlDB}, err
 }
 
 func getEnv(name, defaultValue string) (value string) {
