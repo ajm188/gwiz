@@ -8,25 +8,25 @@ type Connection interface {
 	Ping() error
 }
 
-type DB struct {
+type Conn struct {
 	*sql.DB
 }
 
-func (d *DB) Begin() (Transaction, error) {
-	tx, err := d.DB.Begin()
+func (conn *Conn) Begin() (Transaction, error) {
+	tx, err := conn.DB.Begin()
 	return &Tx{tx}, err
 }
 
-func (d *DB) Prepare(query string) (Statement, error) {
-	stmt, err := d.DB.Prepare(query)
+func (conn *Conn) Prepare(query string) (Statement, error) {
+	stmt, err := conn.DB.Prepare(query)
 	return &Stmt{stmt}, err
 }
 
-func Database(connStr *string) (Connection, error) {
+func NewConnection(connStr *string) (Connection, error) {
 	if connStr == nil {
 		str := ConnectionString()
 		connStr = &str
 	}
 	sqlDB, err := sql.Open("postgres", *connStr)
-	return &DB{sqlDB}, err
+	return &Conn{sqlDB}, err
 }

@@ -1,11 +1,11 @@
 package main
 
 import (
-	"github.com/ajm188/gwiz/handlers"
 	"github.com/ajm188/gwiz/db"
+	"github.com/ajm188/gwiz/handlers"
 )
 
 func main() {
-	db.Database(nil)
+	db.NewConnection(nil)
 	handlers.Serve(":8080")
 }
