@@ -24,17 +24,6 @@ type queryable interface {
 	QueryRow(string, ...interface{}) *sql.Row
 }
 
-type Stmt struct {
-	*sql.Stmt
-}
-
-type Statement interface {
-	closable
-	Exec(...interface{}) (sql.Result, error)
-	Query(...interface{}) (*sql.Rows, error)
-	QueryRow(...interface{}) *sql.Row
-}
-
 type DB struct {
 	*sql.DB
 }
