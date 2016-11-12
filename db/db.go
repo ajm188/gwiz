@@ -64,7 +64,7 @@ func getEnv(name, defaultValue string) (value string) {
 
 func ConnectionString() string {
 	dialect := "postgres"
-	user := getEnv("GWIZ_USER", "gwiz")
+	user := getEnv("GWIZ_USER", getEnv("USER", "gwiz"))
 	pass := os.Getenv("GWIZ_PASS")
 	host := getEnv("GWIZ_HOST", "localhost")
 	dbName := getEnv("GWIZ_DB", "gwiz")
