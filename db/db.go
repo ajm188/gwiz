@@ -35,21 +35,6 @@ type Statement interface {
 	QueryRow(...interface{}) *sql.Row
 }
 
-type Tx struct {
-	*sql.Tx
-}
-
-func (tx *Tx) Stmt(stmt *Stmt) Statement {
-	return &Stmt{tx.Tx.Stmt(stmt.Stmt)}
-}
-
-type Transaction interface {
-	queryable
-	Commit() error
-	Rollback() error
-	Stmt(stmt *Stmt) Statement
-}
-
 type DB struct {
 	*sql.DB
 }
