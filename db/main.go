@@ -11,7 +11,7 @@ import (
 )
 
 const (
-	CONNECTION_FORMAT = "%s://%s:%s@%s/%s"
+	CONNECTION_FORMAT = "%s://%s:%s@%s/%s?sslmode=%s"
 )
 
 type closable interface {
@@ -38,10 +38,11 @@ func ConnectionString() string {
 	pass := os.Getenv("GWIZ_PASS")
 	host := getEnv("GWIZ_HOST", "localhost")
 	dbName := getEnv("GWIZ_DB", "gwiz")
+	sslMode := getEnv("GWIZ_USE_SSL", "disable")
 
-	return generateConnectionString(dialect, user, pass, host, dbName)
+	return generateConnectionString(dialect, user, pass, host, dbName, sslMode)
 }
 
-func generateConnectionString(dialect, user, pass, host, dbName string) string {
-	return fmt.Sprintf(CONNECTION_FORMAT, dialect, user, pass, host, dbName)
+func generateConnectionString(dialect, user, pass, host, dbName, sslMode string) string {
+	return fmt.Sprintf(CONNECTION_FORMAT, dialect, user, pass, host, dbName, sslMode)
 }
