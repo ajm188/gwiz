@@ -1,5 +1,9 @@
 package db
 
+import (
+	"database/sql"
+)
+
 type Connection interface {
 	closable
 	queryable
