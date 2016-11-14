@@ -2,11 +2,13 @@ package handlers
 
 import (
 	"fmt"
+	"html/template"
 	"net/http"
 )
 
 import (
 	"github.com/ajm188/gwiz/db"
+	"github.com/ajm188/gwiz/models"
 )
 
 func zombies() *http.ServeMux {
@@ -39,16 +41,41 @@ func zombieNew(w http.ResponseWriter, r *http.Request) {
 }
 
 func zombieIndex(conn db.Connection, w http.ResponseWriter, r *http.Request) {
-	var count int
-
-	fmt.Fprintf(w, "Listing zombies\n")
-	err := conn.QueryRow("SELECT COUNT(*) FROM zombies").Scan(&count)
+	t, err := template.ParseFiles("./templates/zombies/index.html")
 	if err != nil {
-		fmt.Fprintf(w, "Got %s while performing query\n", err)
+		fmt.Fprintf(w, "Whoops! %s\n", err)
 		return
 	}
+	rows, err := conn.Query("SELECT id, name FROM zombies")
+	if err != nil {
+		fmt.Fprintf(w, "Whoops! %s\n", err)
+		return
+	}
+	defer rows.Close()
+	zombies := make([]*models.Zombie, 0)
+	for rows.Next() {
+		zombie := new(models.Zombie)
+		err := rows.Scan(&zombie.Id, &zombie.Name)
+		if err != nil {
+			fmt.Fprintf(w, "Whoops! %s\n", err)
+			return
+		}
+		zombies = append(zombies, zombie)
+	}
 
-	fmt.Fprintf(w, "%d\n", count)
+	//count := len(zombies)
+	err = t.Execute(w,
+		struct {
+			Zombies []*models.Zombie
+			Count   int
+		}{
+			zombies,
+			len(zombies),
+		},
+	)
+	if err != nil {
+		fmt.Fprintf(w, "Whoops! %s\n", err)
+	}
 }
 
 func zombieCreate(conn db.Connection, w http.ResponseWriter, r *http.Request) {

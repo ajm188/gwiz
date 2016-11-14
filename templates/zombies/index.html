@@ -1,0 +1,17 @@
+<h1>
+    Listing {{ .Count }} Zombies
+</h1>
+
+<table>
+    <tr>
+        <th>ID</th>
+        <th>Name</th>
+    </tr>
+
+    {{ range .Zombies }}
+    <tr>
+        <td>{{ .Id }}</td>
+        <td>{{ .Name }}</td>
+    </tr>
+    {{ end }}
+</table>
