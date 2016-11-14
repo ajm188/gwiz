@@ -1,0 +1,4 @@
+CREATE TABLE IF NOT EXISTS zombies (
+    id INTEGER PRIMARY KEY,
+    name VARCHAR(40)
+);
