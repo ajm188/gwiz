@@ -6,7 +6,11 @@ import (
 	"net/http"
 )
 
-type Request interface {
+import (
+	"github.com/ajm188/gwiz/db"
+)
+
+type request interface {
 	Render(string)
 	RenderFile(string)
 	RenderTemplate(string, interface{})
@@ -16,38 +20,39 @@ type Request interface {
 	Error(int, error)
 }
 
-type GwizRequest struct {
+type Request struct {
 	http.ResponseWriter
 	*http.Request
+	db.Connection
 }
 
-func (g *GwizRequest) Render(raw string) {
-	fmt.Fprintf(g.ResponseWriter, raw)
+func (r *Request) Render(raw string) {
+	fmt.Fprintf(r.ResponseWriter, raw)
 }
 
-func (g *GwizRequest) RenderFile(filename string) {
-	http.ServeFile(g.ResponseWriter, g.Request, filename)
+func (r *Request) RenderFile(filename string) {
+	http.ServeFile(r.ResponseWriter, r.Request, filename)
 }
 
-func (g *GwizRequest) Redirect(url string, status int) {
-	http.Redirect(g.ResponseWriter, g.Request, url, status)
+func (r *Request) Redirect(url string, status int) {
+	http.Redirect(r.ResponseWriter, r.Request, url, status)
 }
 
-func (g *GwizRequest) RenderTemplate(templatePath string, data interface{}) {
+func (r *Request) RenderTemplate(templatePath string, data interface{}) {
 	t, err := template.ParseFiles(templatePath)
 	if err != nil {
-		g.Error(500, err)
+		r.Error(500, err)
 		return
 	}
 
-	err = t.Execute(g.ResponseWriter, data)
+	err = t.Execute(r.ResponseWriter, data)
 	if err != nil {
-		g.Error(500, err)
+		r.Error(500, err)
 		return
 	}
 }
 
-func (g *GwizRequest) Error(status int, err error) {
+func (r *Request) Error(status int, err error) {
 	// TODO: set the status code
-	fmt.Fprintf(g.ResponseWriter, "Got error: %s\n", err)
+	fmt.Fprintf(r.ResponseWriter, "Got error: %s\n", err)
 }
