@@ -2,53 +2,48 @@ package handlers
 
 import (
 	"fmt"
-	"html/template"
 	"net/http"
 )
 
 import (
-	"github.com/ajm188/gwiz/db"
 	"github.com/ajm188/gwiz/models"
 )
 
 func zombies() *http.ServeMux {
 	mux := http.NewServeMux()
 
-	mux.HandleFunc("/detail/", zombieDetail)
-	mux.HandleFunc("/new/", zombieNew)
-	mux.HandleFunc("/", WithConnectionFunc(zombieBase))
+	// TODO: figure out how to wrap these more cleanly
+	mux.HandleFunc("/detail/", WithRequest(zombieDetail))
+	mux.HandleFunc("/new/", WithRequest(zombieNew))
+	mux.HandleFunc("/", WithConnection(zombieBase))
 
 	return mux
 }
 
-func zombieBase(conn db.Connection, w http.ResponseWriter, r *http.Request) {
-	switch r.Method {
+func zombieBase(request *Request) {
+	switch request.Method {
 	case "GET":
-		zombieIndex(conn, w, r)
+		zombieIndex(request)
 	case "POST":
-		zombieCreate(conn, w, r)
+		zombieCreate(request)
 	default:
-		fmt.Fprintf(w, "%s: %s\n", r.Method, r.RequestURI)
+		request.Render(fmt.Sprintf("%s: %s\n", request.Method, request.RequestURI))
 	}
 }
 
-func zombieDetail(w http.ResponseWriter, r *http.Request) {
-	fmt.Fprintf(w, "Hello from zombie detail!\n")
+func zombieDetail(request *Request) {
+	request.Render("Hello from zombie detail!\n")
 }
 
-func zombieNew(w http.ResponseWriter, r *http.Request) {
-	http.ServeFile(w, r, "./templates/zombies/new.html")
+func zombieNew(request *Request) {
+	request.RenderFile("./templates/zombies/new.html")
 }
 
-func zombieIndex(conn db.Connection, w http.ResponseWriter, r *http.Request) {
-	t, err := template.ParseFiles("./templates/zombies/index.html")
-	if err != nil {
-		fmt.Fprintf(w, "Whoops! %s\n", err)
-		return
-	}
+func zombieIndex(request *Request) {
+	conn := request.Connection
 	rows, err := conn.Query("SELECT id, name FROM zombies")
 	if err != nil {
-		fmt.Fprintf(w, "Whoops! %s\n", err)
+		request.Error(500, err)
 		return
 	}
 	defer rows.Close()
@@ -57,14 +52,13 @@ func zombieIndex(conn db.Connection, w http.ResponseWriter, r *http.Request) {
 		zombie := new(models.Zombie)
 		err := rows.Scan(&zombie.Id, &zombie.Name)
 		if err != nil {
-			fmt.Fprintf(w, "Whoops! %s\n", err)
+			request.Error(500, err)
 			return
 		}
 		zombies = append(zombies, zombie)
 	}
 
-	//count := len(zombies)
-	err = t.Execute(w,
+	request.RenderTemplate("./templates/zombies/index.html",
 		struct {
 			Zombies []*models.Zombie
 			Count   int
@@ -73,29 +67,27 @@ func zombieIndex(conn db.Connection, w http.ResponseWriter, r *http.Request) {
 			len(zombies),
 		},
 	)
-	if err != nil {
-		fmt.Fprintf(w, "Whoops! %s\n", err)
-	}
 }
 
-func zombieCreate(conn db.Connection, w http.ResponseWriter, r *http.Request) {
-	fmt.Fprintf(w, "I see you are trying to create a zombie!\n")
-	if err := r.ParseForm(); err != nil {
-		fmt.Fprintf(w, "Uh oh. Got %s when parsing form", err)
+func zombieCreate(request *Request) {
+	request.Render("I see you are trying to create a zombie!\n")
+	if err := request.ParseForm(); err != nil {
+		request.Error(500, err)
 		return
 	}
-	name := r.FormValue("name")
-	fmt.Fprintf(w, "You asked to create a zombie with name: %s\n", name)
+	name := request.FormValue("name")
+	request.Render(fmt.Sprintf("You asked to create a zombie with name: %s\n", name))
 
+	conn := request.Connection
 	stmt, err := conn.Prepare("INSERT INTO zombies (name) VALUES ($1) RETURNING id;")
 	if err != nil {
-		fmt.Fprintf(w, "%s", err)
+		request.Error(500, err)
 		return
 	}
 
 	rows, err := stmt.Query(name)
 	if err != nil {
-		fmt.Fprintf(w, "%s", err)
+		request.Error(500, err)
 		return
 	}
 
@@ -103,10 +95,10 @@ func zombieCreate(conn db.Connection, w http.ResponseWriter, r *http.Request) {
 	for rows.Next() {
 		var id int
 		if err := rows.Scan(&id); err != nil {
-			fmt.Fprintf(w, "%s", err)
+			request.Error(500, err)
 			return
 		}
-		fmt.Fprintf(w, "That zombie was created with id %d\n", id)
+		request.Render(fmt.Sprintf("That zombie was created with id %d\n", id))
 	}
-	fmt.Fprintf(w, "One day this will 302 you to that zombie's page\n")
+	request.Render("One day this will 302 you to that zombie's page\n")
 }
