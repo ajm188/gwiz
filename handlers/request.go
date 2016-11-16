@@ -23,7 +23,7 @@ type request interface {
 type Request struct {
 	http.ResponseWriter
 	*http.Request
-	db.Connection
+	db.Transaction
 }
 
 func (r *Request) Render(raw string) {

@@ -25,12 +25,3 @@ func (conn *Conn) Prepare(query string) (Statement, error) {
 	stmt, err := conn.DB.Prepare(query)
 	return &Stmt{stmt}, err
 }
-
-func NewConnection(connStr *string) (Connection, error) {
-	if connStr == nil {
-		str := ConnectionString()
-		connStr = &str
-	}
-	sqlDB, err := sql.Open("postgres", *connStr)
-	return &Conn{sqlDB}, err
-}

@@ -15,7 +15,7 @@ func zombies() *http.ServeMux {
 	// TODO: figure out how to wrap these more cleanly
 	mux.HandleFunc("/detail/", WithRequest(zombieDetail))
 	mux.HandleFunc("/new/", WithRequest(zombieNew))
-	mux.HandleFunc("/", WithConnection(zombieBase))
+	mux.HandleFunc("/", WithTransaction(zombieBase))
 
 	return mux
 }
@@ -40,8 +40,8 @@ func zombieNew(request *Request) {
 }
 
 func zombieIndex(request *Request) {
-	conn := request.Connection
-	rows, err := conn.Query("SELECT id, name FROM zombies")
+	txn := request.Transaction
+	rows, err := txn.Query("SELECT id, name FROM zombies")
 	if err != nil {
 		request.Error(500, err)
 		return
@@ -78,8 +78,8 @@ func zombieCreate(request *Request) {
 	name := request.FormValue("name")
 	request.Render(fmt.Sprintf("You asked to create a zombie with name: %s\n", name))
 
-	conn := request.Connection
-	stmt, err := conn.Prepare("INSERT INTO zombies (name) VALUES ($1) RETURNING id;")
+	txn := request.Transaction
+	stmt, err := txn.Prepare("INSERT INTO zombies (name) VALUES ($1) RETURNING id;")
 	if err != nil {
 		request.Error(500, err)
 		return

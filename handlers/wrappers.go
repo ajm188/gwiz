@@ -21,34 +21,23 @@ func WithRequest(f RequestFunc) http.HandlerFunc {
 	}
 }
 
-func WithConnection(f RequestFunc) http.HandlerFunc {
+func WithTransaction(f RequestFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		req := Request{
 			w,
 			r,
 			nil,
 		}
-		conn, err := db.NewConnection(nil)
+		txn, err := db.Begin()
 		if err != nil {
 			req.Error(500, err)
 			return
 		}
-		defer conn.Close()
-		req.Connection = conn
+		req.Transaction = txn
 		f(&req)
-	}
-}
 
-type ConnectionHandlerFunc func(db.Connection, http.ResponseWriter, *http.Request)
-
-func WithConnectionFunc(handlerFunc ConnectionHandlerFunc) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		conn, err := db.NewConnection(nil)
-		if err != nil {
-			http.NotFoundHandler().ServeHTTP(w, r)
-			return
+		if err = txn.Commit(); err != nil {
+			req.Error(500, err)
 		}
-		defer conn.Close()
-		handlerFunc(conn, w, r)
 	}
 }
