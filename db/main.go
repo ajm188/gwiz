@@ -24,6 +24,10 @@ type queryable interface {
 	QueryRow(string, ...interface{}) *sql.Row
 }
 
+type preparable interface {
+	Prepare(string) (Statement, error)
+}
+
 func getEnv(name, defaultValue string) (value string) {
 	value = os.Getenv(name)
 	if value == "" {

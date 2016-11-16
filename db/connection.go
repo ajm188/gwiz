@@ -7,8 +7,8 @@ import (
 type Connection interface {
 	closable
 	queryable
+	preparable
 	Begin() (Transaction, error)
-	Prepare(string) (Statement, error)
 	Ping() error
 }
 
