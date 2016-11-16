@@ -6,6 +6,9 @@ import (
 )
 
 func main() {
-	db.NewConnection(nil)
+	if err := db.Connect(nil); err != nil {
+		return
+	}
+	defer db.Disconnect()
 	handlers.Serve(":8080")
 }
